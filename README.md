@@ -1,6 +1,10 @@
-# Weather Forecast Sample
+# Weather Forecast
 
-A sample weather forecasting application created using React and TypeScript.
+A sample five-day forecast application created using React and TypeScript.
+
+## Live Demo
+
+A live demo of the application can be viewed [here](http://silentorb-weather-forecast.s3-website-us-west-2.amazonaws.com).
 
 ## Installation Instructions
  
