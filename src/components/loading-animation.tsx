@@ -1,6 +1,9 @@
 import * as React from 'react'
 import styled from 'styled-components'
 
+// Not currently being used.
+// Would require additional timing code.
+
 const LoadingAnimationStyle = styled.div`
     height: 100vh;
     display: flex;

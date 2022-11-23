@@ -1,69 +1,44 @@
 import * as React from 'react'
+import { useState } from 'react'
 import * as ReactDOM from 'react-dom/client'
-import { useEffect, useState } from 'react'
-import { defaultRequestConfig, getZones } from './query'
-import Select from 'react-select'
-import { usProvinces } from './data'
-import { LoadingAnimation } from './loading-animation'
-import { Zone } from './types'
-import * as _ from 'lodash'
+import { getQueryParams } from './utility'
+import { defaultRequestConfig } from './web-services'
+import { HttpErrorDisplay, ZoneSelect } from './components'
+import { createGlobalStyle } from 'styled-components'
+import { AxiosError } from 'axios'
 
-function formatZoneOptions(zones: Zone[]) {
-  const grouped = Object.entries(_.groupBy(zones, 'properties.id'))
-  return grouped
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(entry => ({
-      value: entry[0],
-      label: entry[1][0].properties.name,
-    }))
-}
+const GlobalStyle = createGlobalStyle`  
+  body {
+    margin: 0;
+    font-family: Verdana, sans-serif;
+    background-color: #EEE;
+  }
+
+  h1 {
+    text-align: center;
+    margin: 0;
+    padding: 20px 0 20px 0;
+    font-size: 42px;
+    background-color: #FFF;
+  }
+`
 
 const App = () => {
-  const requestConfig = defaultRequestConfig()
-  const [province, setProvince] = useState<string | undefined>(undefined)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [zones, setZones] = useState<Zone[]>([])
-  const [selectedZone, setSelectedZone] = useState<Zone | undefined>(undefined)
-
-  useEffect(() => {
-    async function process() {
-      // setIsLoading(true)
-      const zones = await getZones(requestConfig, province)
-      console.log('stations', province, zones.length)
-      setZones(zones)
-      // setIsLoading(false)
-    }
-
-    if (province) {
-      process()
-    }
-  }, [province])
-
+  const params = getQueryParams()
+  const [error, setError] = useState<Error | AxiosError | undefined>(undefined)
   return <div>
-    <div>
-      <Select
-        options={usProvinces}
-        onChange={option => setProvince(option.value)
-        }
-      />
-    </div>
-    <div>
-      {
-        province && zones &&
-        <Select
-          options={formatZoneOptions(zones)}
-          onChange={option =>
-            setSelectedZone(zones.filter(z => z.properties.id == option.value)[0])
-          }
-        />
-      }
-    </div>
-    <div>
-      {
-        JSON.stringify(selectedZone, undefined, 2)
-      }
-    </div>
-    {isLoading && <LoadingAnimation/>}
+    <GlobalStyle/>
+    <h1>Weather Caster</h1>
+    <ZoneSelect
+      province={params.province}
+      zone={params.zone}
+      requestConfig={defaultRequestConfig()}
+      onError={setError}
+      error={error}
+    />
+    {
+      error && 'response' in error && <HttpErrorDisplay error={error}/>
+    }
   </div>
 }
 
