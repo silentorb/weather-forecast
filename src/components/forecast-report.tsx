@@ -4,6 +4,7 @@ import { ErrorHandler, ForecastPeriods, Zone } from '../types'
 import { getAverageCenter } from '../utility'
 import { getForecastFromLatLong, getZoneDetails, RequestConfig } from '../web-services/requests'
 import styled from 'styled-components'
+import { HourlyPeriods } from './hourly-periods'
 
 interface Props {
   zone: Zone
@@ -25,14 +26,14 @@ const PeriodBlock = styled.div`
   flex-direction: column;
   align-items: center;
   padding-bottom: 30px;
-  
+
   h3 {
     font-size: 32px;
   }
 `
 
 const TemperatureBlock = styled.div`
-margin: 20px 0 20px 0;
+  margin: 20px 0 20px 0;
 `
 
 const TemperatureValue = styled.span`
@@ -43,6 +44,7 @@ const TemperatureValue = styled.span`
 export const ForecastReport = (props: Props) => {
   const { requestConfig, onError, zone } = props
   const [periods, setPeriods] = useState<ForecastPeriods>([])
+  const [hourlyPeriods, setHourlyPeriods] = useState<ForecastPeriods>([])
 
   useEffect(() => {
     async function fetch() {
@@ -51,8 +53,9 @@ export const ForecastReport = (props: Props) => {
         throw new Error(`Could not get geometry for zone ${zone.properties.id}`)
 
       const coordinates = getAverageCenter(geometry)
-      const forecast = await getForecastFromLatLong(requestConfig, coordinates[0], coordinates[1])
-      setPeriods(forecast.properties.periods)
+      const [newPeriods, newHourlyPeriods] = await getForecastFromLatLong(requestConfig, coordinates[0], coordinates[1])
+      setPeriods(newPeriods)
+      setHourlyPeriods(newHourlyPeriods)
       onError(undefined)
     }
 
@@ -66,7 +69,7 @@ export const ForecastReport = (props: Props) => {
     .map(period => (
       <PeriodBlock key={period.number}>
         <h3>{period.name}</h3>
-        <div><img src={period.icon.replace(/size=medium/, 'size=large')} alt=''/></div>
+        <div><img src={period.icon.replace(/size=medium/, 'size=large')} alt=""/></div>
         <TemperatureBlock>
           <TemperatureValue>{period.temperature}{period.temperatureUnit}</TemperatureValue> {period.temperatureTrend}
         </TemperatureBlock>
@@ -74,7 +77,10 @@ export const ForecastReport = (props: Props) => {
       </PeriodBlock>
     ))
 
-  return <PeriodsContainer>
-    {periodBlocks}
-  </PeriodsContainer>
+  return <div>
+    <PeriodsContainer>
+      {periodBlocks}
+    </PeriodsContainer>
+    <HourlyPeriods periods={hourlyPeriods}/>
+  </div>
 }

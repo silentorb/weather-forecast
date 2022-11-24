@@ -10,6 +10,7 @@ import { Dictionary } from 'lodash'
 import { isDebugging, setQueryParams } from '../utility'
 import { ForecastReport } from './forecast-report'
 import styled from 'styled-components'
+import { HourlyPeriods } from './hourly-periods'
 
 type ZoneDictionary = Dictionary<Zone[]>
 
@@ -72,7 +73,7 @@ export const ZoneSelect = (props: Props) => {
   }, [province])
 
   useEffect(() => {
-    setQueryParams({ province, zone, debug: isDebugging() })
+    setQueryParams({ province, zone })
   }, [province, zone])
 
   const zoneRecords = zones[zone]

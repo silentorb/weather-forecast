@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Zone } from '../types'
+import { ForecastPeriod, ForecastPeriods, Zone } from '../types'
 import { ForecastResponse, GridPointResponse } from './responses'
 
 declare const WEATHER_URL: string
@@ -38,15 +38,15 @@ export function getZones(config: RequestConfig, province: string) {
   return getAllItems(config.limit, 'features', formatUrl(config, `zones?area=${province}`))
 }
 
-export async function getForecastFromGridPoints(config: RequestConfig, office: string, x: number, y: number): Promise<ForecastResponse> {
-  return (await simpleGet(config, `gridpoints/${office}/${x},${y}/forecast`)) as ForecastResponse
-}
-
 export async function getZoneDetails(config: RequestConfig, zoneId: string): Promise<Zone> {
   return (await simpleGet(config, `zones/forecast/${zoneId}`)) as Zone
 }
 
-export async function getForecastFromLatLong(config: RequestConfig, lat: number, long: number): Promise<ForecastResponse> {
+export async function getForecastFromGridPoints(config: RequestConfig, office: string, x: number, y: number, suffix: string = ''): Promise<ForecastResponse> {
+  return (await simpleGet(config, `gridpoints/${office}/${x},${y}/forecast${suffix}`)) as ForecastResponse
+}
+
+export async function getForecastFromLatLong(config: RequestConfig, lat: number, long: number): Promise<[ForecastPeriods, ForecastPeriods]> {
   // There is a bug with the weather API where the longitude and latitude parameters are backwards.
   // If the arguments are provided in the order the API specifies then the API returns a 400.
   // This bug is confirmed in that the output coordinates (response data)
@@ -58,7 +58,9 @@ export async function getForecastFromLatLong(config: RequestConfig, lat: number,
   // and won't actually navigate to that tab and anchor.
   const gridPointData = (await simpleGet(config, `points/${long},${lat}`)) as GridPointResponse
   const { gridId, gridX, gridY } = gridPointData.properties
-  return getForecastFromGridPoints(config, gridId, gridX, gridY)
+  const periods = (await getForecastFromGridPoints(config, gridId, gridX, gridY)).properties.periods
+  const hourlyPeriods = (await getForecastFromGridPoints(config, gridId, gridX, gridY, '/hourly')).properties.periods
+  return [periods, hourlyPeriods]
 }
 
 export function defaultRequestConfig(): RequestConfig {
